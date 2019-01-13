@@ -6,4 +6,8 @@ module.exports = app => {
   app.get('/api/users', Users.getAll)
 
   app.get('/api/users/:id', Users.get)
+
+  app.put('/api/users/:id', Users.put)
+
+  app.delete('/api/users/:id', Users.delete)
 }

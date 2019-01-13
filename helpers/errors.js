@@ -1,16 +1,23 @@
-const error = (title, route, status, detail) => {
-  return { status, source: { pointer: route }, title, detail }
+const error = (title, route, status, detail, message) => {
+  return { status, source: { pointer: route }, title, detail: detail || message }
 }
 
-const getError = (status, route) => {
+const getError = (status, route, message) => {
   switch (status) {
     case 400:
-      return error('Invalid Attribute', route, status, 'User id is NOT valid')
+      return error('Invalid Attribute', route, status, 'User id is NOT valid', message)
     case 404:
-      return error('Not Found', route, status, 'User id is NOT exist')
+      return error('Not Found', route, status, 'User id is NOT exist', message)
     default:
-      return error('Not Found', route, status, 'User id is NOT exist')
+      return error('Not Found', route, status, 'User id is NOT exist', message)
   }
 }
 
-module.exports = { getError }
+const sendError = (req, res, statusCode, id, errorsValidator = {}) => {
+  const props = !id ? {} : { value: id, path: 'id' }
+  const errorsList = errorsValidator && errorsValidator.errors || [ null ]
+  const errors = errorsList.map(error => getError(statusCode, req.route.path, error && error.message))
+  return res.status(statusCode).json({ type: 'errors', errors, ...props })
+}
+
+module.exports = { sendError }

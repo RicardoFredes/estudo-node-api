@@ -1,66 +1,69 @@
-const { getError } = require('../helpers/errors')
-const { parseUser } = require('../helpers/users')
+const { sendError } = require('../helpers/errors')
+const { sendResponseUsers } = require('../helpers/users')
 
 module.exports = app => {
-  const User = app.config.sequelize.models.users
+  const Users = app.config.sequelize.models.users
+  return {
 
-  const UserCRUD = {}
+    getAll: (req, res) => {
+      const { page } = req.query
+      const limit = 5
+      const offset = page - 1
+      return Users.findAndCountAll({ limit, offset })
+        .then(({ count, rows }) => {
+          const meta = getMeta(req, count, limit)
+          return sendResponseUsers(req, res, rows, meta)
+        })
+        .catch(errors => sendError(req, res, 404, null, errors))
+    },
 
-  UserCRUD.post = (req, res) => {
-    const { name } = req.body
-    const pointer = req.route.path
-    return User.create({ name })
-     .then(user => res.status(201).json({  data: [parseUser(user)] }))
-     .catch(error => res.status(400).json({
-       errors: parseError(error, pointer, 'Invalid Attribute', 400)
-     }))
+    get: (req, res) => {
+      const { id } = req.params
+      return Users.findById(id)
+        .then(users => sendResponseUsers(req, res, users))
+        .catch(errors => sendError(req, res, 400, id, errors))
+    },
+
+    post: (req, res) => {
+      const data = req.body
+      return Users.create(data)
+       .then(users => sendResponseUsers(req, res, users))
+       .catch(errors => sendError(req, res, 400, null, errors))
+    },
+
+    put: (req, res) => {
+      const { id } = req.params
+      const data = req.body
+      return Users.update(data, { where: { id } })
+        .then(() => Users.findById(id))
+        .then(users => sendResponseUsers(req, res, users))
+        .catch(errors => sendError(req, res, 400, null, errors))
+    },
+
+    delete: (req, res) => {
+      const { id } = req.params
+      return Users.findById(id)
+        .then(users => Users.destroy({ where: { id: users.id } }))
+        .then(() => res.json({ type: "success", content: "User deleted" }))
+        .catch(errors => sendError(req, res, 404, null, errors))
+    },
+
   }
-
-  UserCRUD.getAll = (req, res) =>
-    User.findAll().then(users => {
-      const data = users.map(parseUser)
-      return res.status(201).json({ meta: { count: users.length }, data })
-    })
-
-  UserCRUD.get = (req, res) => {
-    const { id } = req.params
-    User.findById(id)
-      .then(user => {
-        if (!user) {
-          return res.status(404).json({
-            errors: [{
-              status: 404,
-              title: 'Not Found',
-              source: { pointer: req.route.path },
-              detail: 'User id is NOT exist',
-              value: id,
-              path: 'id'
-            }]
-          })
-        }
-        return res.status(201).json({  data: [parseUser(user)] })
-      })
-      .catch(() => res.status(400).json({
-        errors: [{
-          status: 400,
-          title: 'Invalid Attribute',
-          source: { pointer: req.route.path },
-          detail: 'User id is NOT valid',
-          value: id,
-          path: 'id'
-        }]
-      }))
-  }
-
-  return UserCRUD
 }
 
-const parseError = ({ errors }, pointer, title, status) =>
-  errors.map(({message, value, path}) => ({
-    status,
-    title,
-    source: { pointer },
-    detail: message,
-    value,
-    path,
-  }))
+const getMeta = (req, count, limit) => {
+  const page = Number(req.query.page)
+  const path = req.route.path
+  const pages = Math.ceil(count/limit)
+  const links = { current: req.url }
+
+  if (page) {
+    const lastPage = page - 1
+    links.last = `${path}?page=${lastPage}`
+  }
+  if (page < pages) {
+    const nextPage = page + 1
+    links.next = `${path}?page=${nextPage}`
+  }
+  return { links, pages }
+}

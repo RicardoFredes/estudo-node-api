@@ -1,12 +1,18 @@
-const parseUser = user => ({
+const sendResponse = require('./sendResponse')
+
+const sendResponseUsers = (req, res, users, meta) => {
+  return sendResponse(res, users, parseUsers, meta)
+}
+
+const parseUsers = users => ({
   type: 'users',
-  id: user.id,
-  createdAt: user.createdAt,
-  updatedAt: user.updatedAt,
+  id: users.id,
+  createdAt: users.createdAt,
+  updatedAt: users.updatedAt,
   attributes: {
-    id: user.id,
-    name: user.name,
+    id: users.id,
+    name: users.name,
   }
 })
 
-module.exports = { parseUser }
+module.exports = { sendResponseUsers }
