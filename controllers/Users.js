@@ -59,7 +59,7 @@ const getMeta = (req, count, limit) => {
   const pages = Math.ceil(count/limit)
   const links = { current: req.url }
 
-  if (page) {
+  if (page > 0) {
     const lastPage = page - 1
     links.last = `${path}?page=${lastPage}`
   }
