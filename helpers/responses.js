@@ -1,10 +1,9 @@
 const getMetaPagination = (req, count, limit) => {
-  const page = Number(req.query.page)
+  const page = Number(req.query.page) || 1
   const path = req.route.path
   const pages = Math.ceil(count/limit)
   const links = { current: req.url }
-
-  if (page) {
+  if (page > 1) {
     const lastPage = page - 1
     links.last = `${path}?page=${lastPage}`
   }

@@ -10,9 +10,11 @@ module.exports = app => {
       const { page = 1 } = req.query
       const limit = 5
       const offset = page - 1
+
       if (offset < 0) return sendError(req, res, 400, 'Pagination value is NOT valid')
       return Users.findAndCountAll({ limit, offset })
         .then(({ count, rows }) => {
+          console.log('XXXXXXXXX       ', 'page: ' + page, ', offset: ' + offset, ', count: ' + count)
           const meta = getMetaPagination(req, count, limit)
           return sendResponseUsers(req, res, rows, meta)
         })
@@ -51,21 +53,4 @@ module.exports = app => {
     },
 
   }
-}
-
-const getMeta = (req, count, limit) => {
-  const page = Number(req.query.page)
-  const path = req.route.path
-  const pages = Math.ceil(count/limit)
-  const links = { current: req.url }
-
-  if (page > 1) {
-    const lastPage = page - 1
-    links.last = `${path}?page=${lastPage}`
-  }
-  if (page < pages) {
-    const nextPage = page + 1
-    links.next = `${path}?page=${nextPage}`
-  }
-  return { links, pages }
 }
