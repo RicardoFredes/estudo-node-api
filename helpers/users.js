@@ -1,4 +1,4 @@
-const sendResponse = require('./sendResponse')
+const { sendResponse } = require('./responses')
 
 const sendResponseUsers = (req, res, users, meta) => {
   return sendResponse(res, users, parseUsers, meta)

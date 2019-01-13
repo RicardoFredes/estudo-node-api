@@ -1,17 +1,19 @@
 const { sendError } = require('../helpers/errors')
 const { sendResponseUsers } = require('../helpers/users')
+const { getMetaPagination } = require('../helpers/responses')
 
 module.exports = app => {
   const Users = app.config.sequelize.models.users
   return {
 
     getAll: (req, res) => {
-      const { page } = req.query
+      const { page = 1 } = req.query
       const limit = 5
       const offset = page - 1
+      if (offset < 0) return sendError(req, res, 400, 'Pagination value is NOT valid')
       return Users.findAndCountAll({ limit, offset })
         .then(({ count, rows }) => {
-          const meta = getMeta(req, count, limit)
+          const meta = getMetaPagination(req, count, limit)
           return sendResponseUsers(req, res, rows, meta)
         })
         .catch(errors => sendError(req, res, 404, null, errors))
