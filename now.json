@@ -1,5 +1,5 @@
 {
   "name": "estudo-node-api",
   "version": 2,
-  "builds": [{ "src": "package.json", "use": "@now/node" }]
+  "builds": [{ "src": "package.json", "use": "@now/node-server" }]
 }
